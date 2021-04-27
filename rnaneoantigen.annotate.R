@@ -75,7 +75,7 @@ blast <- function(patient,peplength,wd,max.mutations = 2,max.gaps = 1,onlytophit
 }
 
 #3. getfasta of your new blasted segments and compare them with your contigs (note have to run this again after 4)
-fastafromblast <- function(patient,wd,blastout,contig,pep.contig,peplength){
+fastafromblast <- function(patient,wd,blastout,contig,pep.contig,peplength,bedtools.wd){
   #write bed file
   strand <- rep('-',dim(blastout)[1])
   #add strand information
@@ -93,8 +93,7 @@ fastafromblast <- function(patient,wd,blastout,contig,pep.contig,peplength){
   }
 
   setwd('references/')
-  system('module use bedtools2/2.29.2')
-  system(paste('bedtools getfasta -fi ',wd,'references/human_grch38.fa -bed ',wd,'bedfiles/',patient,' -fo ',wd,'bedfiles/',patient,'.fasta',sep=''),intern=TRUE)
+  system(paste(bedtools.wd,'bedtools getfasta -fi ',wd,'references/human_grch38.fa -bed ',wd,'bedfiles/',patient,' -fo ',wd,'bedfiles/',patient,'.fasta',sep=''),intern=TRUE)
   fasta <- as.character(read.table(paste(wd,'bedfiles/',patient,'.fasta',sep=''),header=FALSE,stringsAsFactors = F)[[1]])
   setwd('..')
   
@@ -145,7 +144,7 @@ fastafromblast <- function(patient,wd,blastout,contig,pep.contig,peplength){
 }
 
 #4. blast with gapped junctions
-junctioncaller <- function(blastout,wd,patient,contig,pep.contig,peplength){
+junctioncaller <- function(blastout,wd,patient,contig,pep.contig,peplength,bedtools.wd){
   setwd(wd)
   #reblast subsequences with long seqments that do not align and insert them into blastout.mat
   reblast.front <- blastout[as.numeric(blastout[,7]) > peplength*3,]
@@ -229,12 +228,12 @@ junctioncaller <- function(blastout,wd,patient,contig,pep.contig,peplength){
   
   #blastout.fasta <- fastafromblast(patient,wd,blastout.out,contig,pep.contig,peplength)
   if(exists("blastout.front") && dim(blastout.front)[1] > 0){blastout.fasta.front <- 
-    fastafromblast(patient,wd,blastout.front,contig,pep.contig,peplength)
+    fastafromblast(patient,wd,blastout.front,contig,pep.contig,peplength,bedtools.wd)
     label.front <- rep("front",dim(blastout.fasta.front)[1])
     label.original[blastout.out[,1] %in% blastout.fasta.front[,1]] <- "back"
   }
   if(exists("blastout.back") && dim(blastout.back)[1] > 0){
-    blastout.fasta.back <- fastafromblast(patient,wd,blastout.back,contig,pep.contig,peplength)
+    blastout.fasta.back <- fastafromblast(patient,wd,blastout.back,contig,pep.contig,peplength,bedtools.wd)
     label.back <- rep("back",dim(blastout.fasta.back)[1])
     label.original[blastout.out[,1] %in% blastout.fasta.back[,1]] <- 'front'
   }
@@ -541,41 +540,41 @@ gtf.blast <- function(blastout,gtf.gene.list,gtf.exon.list,mart){
   }
   
   #use biomart to add in gene symbols
-  #ens <- c(blastout.temp[,1][is.na(blastout.temp[,1]) == FALSE],blastout.temp[,2][is.na(blastout.temp[,2]) == FALSE])
-  #ensLookup <- unique(ens)
-  #annotLookup <- getBM(
-  #  mart=mart,
-  #  attributes=c("ensembl_transcript_id", "ensembl_gene_id", "gene_biotype", "external_gene_name"),
-  #  filter="ensembl_gene_id",
-  #  values=ensLookup,
-  #  uniqueRows=TRUE,
-  #  useCache= FALSE)
-  #annotLookup <- unique(annotLookup[,c(2,3,4)])
-  #for(i in 1:dim(blastout.temp)[1]){
-  #  j = sum(is.na(blastout.temp[i,c(1:2)]) == FALSE)
-  #  if(j == 1){
-  #    
-  #    temp2 <- annotLookup$gene_biotype[annotLookup$ensembl_gene_id == blastout.temp[i,1]]
-  #    if(length(temp2) > 0){blastout.temp[i,5] <- temp2}
-  #    
-  #    temp2 <- annotLookup$external_gene_name[annotLookup$ensembl_gene_id == blastout.temp[i,1]]
-  #    if(length(temp2) > 0){blastout.temp[i,6] <- temp2}
-  #    
-  #  } else if(j == 2){
-  #    
-  #    temp2 <- annotLookup$gene_biotype[annotLookup$ensembl_gene_id == blastout.temp[i,1]]
-  #    if(length(temp2) > 0){blastout.temp[i,5]}
-  #    
-  #    temp2 <- annotLookup$external_gene_name[annotLookup$ensembl_gene_id == blastout.temp[i,1]]
-  #    if(length(temp2) > 0){blastout.temp[i,6]}
-  #    
-  #    temp2 <- annotLookup$gene_biotype[annotLookup$ensembl_gene_id == blastout.temp[i,2]]
-  #    if(length(temp2) > 0){blastout.temp[i,7]}
-  #    
-  #    temp2 <- annotLookup$external_gene_name[annotLookup$ensembl_gene_id == blastout.temp[i,2]]
-  #    if(length(temp2) > 0){blastout.temp[i,8]}
-  #  }
-  #}
+  ens <- c(blastout.temp[,1][is.na(blastout.temp[,1]) == FALSE],blastout.temp[,2][is.na(blastout.temp[,2]) == FALSE])
+  ensLookup <- unique(ens)
+  annotLookup <- getBM(
+    mart=mart,
+    attributes=c("ensembl_transcript_id", "ensembl_gene_id", "gene_biotype", "external_gene_name"),
+    filter="ensembl_gene_id",
+    values=ensLookup,
+    uniqueRows=TRUE,
+    useCache= FALSE)
+  annotLookup <- unique(annotLookup[,c(2,3,4)])
+  for(i in 1:dim(blastout.temp)[1]){
+    j = sum(is.na(blastout.temp[i,c(1:2)]) == FALSE)
+    if(j == 1){
+      
+      temp2 <- annotLookup$gene_biotype[annotLookup$ensembl_gene_id == blastout.temp[i,1]]
+      if(length(temp2) > 0){blastout.temp[i,5] <- temp2}
+      
+      temp2 <- annotLookup$external_gene_name[annotLookup$ensembl_gene_id == blastout.temp[i,1]]
+      if(length(temp2) > 0){blastout.temp[i,6] <- temp2}
+      
+    } else if(j == 2){
+      
+      temp2 <- annotLookup$gene_biotype[annotLookup$ensembl_gene_id == blastout.temp[i,1]]
+      if(length(temp2) > 0){blastout.temp[i,5]}
+      
+      temp2 <- annotLookup$external_gene_name[annotLookup$ensembl_gene_id == blastout.temp[i,1]]
+      if(length(temp2) > 0){blastout.temp[i,6]}
+      
+      temp2 <- annotLookup$gene_biotype[annotLookup$ensembl_gene_id == blastout.temp[i,2]]
+      if(length(temp2) > 0){blastout.temp[i,7]}
+      
+      temp2 <- annotLookup$external_gene_name[annotLookup$ensembl_gene_id == blastout.temp[i,2]]
+      if(length(temp2) > 0){blastout.temp[i,8]}
+    }
+  }
   colnames(blastout.temp) <- c('Gencode gene 1','Gencode gene 2','Gencode exon 1','Gencode exon 2','Gene type 1','Hugo Symbol 1','Gene type 2','Hugo symbol 2')
   blastout <- cbind(blastout,blastout.temp)
   

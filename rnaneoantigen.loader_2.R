@@ -1,6 +1,6 @@
 ################################ rnaneoantigen.loader.R   Load in files  ########################################################
 
-peptide.to.seq <- function(peplength,netmhc_out,pepmet,patient){
+peptide.to.seq <- function(peplength,netmhc_out,pepmet,patient,wd,normal.wd){
   #this function creates a list of contigs for each peptide. Steps:
   #1. find sub-sequence that codes for peptide within rnaseq read
   #2. Center reads on peptide coding sequence (maximum possible contig length)
@@ -29,7 +29,16 @@ peptide.to.seq <- function(peplength,netmhc_out,pepmet,patient){
   codon.table[['R']] <- c('CGA','CGC','CGG','CGT','AGA','AGG')
   codon.table[['G']] <- c('GGA','GGC','GGG','GGT')
   
-  bind.names <- rownames(netmhc_out[rowMins(as.matrix(netmhc_out),na.rm=TRUE) < 2,])
+  bind.names <- rownames(netmhc_out[rowMins(as.matrix(netmhc_out),na.rm=TRUE) < 0.5,])
+  bindname_normal <- vector(mode='numeric',length(bind.names))
+  for(bindname_counter in 1:length(bind.names)){
+    temp_bindname <- try(system(paste('grep -w ',bind.names[bindname_counter],' ',normal.wd,'luc2_',peplength,'mer_normalpep.txt_seq_',substr(bind.names[bindname_counter],1,2),sep=''),intern=TRUE))
+    if(length(temp_bindname != 0)){
+      bindname_normal[bindname_counter] = 1
+    }
+    rm(temp_bindname)
+  }
+  bind.names <- bind.names[bindname_normal == 0]
   pepmet <- pepmet[(which(pepmet[[1]] %in% bind.names)),]
   pepmet <- pepmet[order(pepmet[[1]]),]
   pepmet <- pepmet[,c(2:1)]
@@ -123,7 +132,7 @@ peptide.to.seq <- function(peplength,netmhc_out,pepmet,patient){
     contig.write[2*i-1] <- paste(">",names(pep.contig)[i],sep=' ')
     contig.write[2*i] <- pep.contig[i]
   }
-  write.table(contig.write,file=paste('contig/',patient,peplength,sep=''),quote=FALSE,row.names = FALSE,col.names=FALSE)
+  write.table(contig.write,file=paste(wd,'contig/',patient,peplength,sep=''),quote=FALSE,row.names = FALSE,col.names=FALSE)
   pep.contig.save <- cbind(pep.contig,peponly.contig,contig.pepstart)
   rownames(pep.contig.save) <- names(pep.contig)
   
@@ -131,11 +140,11 @@ peptide.to.seq <- function(peplength,netmhc_out,pepmet,patient){
 }
 
 
-netmhc.loader <- function(peplength,patient,wd){
+netmhc.loader <- function(peplength,patient,wd,wd.in,normal.wd){
   col.names <- c('Pos','HLA','Peptide','Core','Of','Gp','Gl','Ip','ll','lcore','Identity','Score','Aff(nM)','%Rank','BindLevel')
   contig.return = TRUE
   #load netmhcpan output
-  netmhc <- read.table(paste(wd,patient,"_",peplength,"mer_neoantigens.txt",sep=""),header=FALSE,fill=TRUE,col.names = col.names,sep=',')
+  netmhc <- read.table(paste(wd.in,patient,"_",peplength,"mer_neoantigens.txt",sep=""),header=FALSE,fill=TRUE,col.names = col.names,sep=',')
   netmhc <- netmhc[nchar(as.character(netmhc[[3]])) == peplength,]
   netmhc <- data.frame(netmhc[[3]],netmhc[[2]],netmhc[[13]])
   colnames(netmhc) <- c('V1','V2','V3')
@@ -146,7 +155,7 @@ netmhc.loader <- function(peplength,patient,wd){
   #netmhc <- netmhc[-grep('X',rownames(netmhc)),]
       
   #load in peptide counts
-  pepmet <- read.table(paste(wd,patient,'_',peplength,'mer_neoantmetadata.txt',sep=""))
+  pepmet <- read.table(paste(wd.in,patient,'_',peplength,'mer_neoantmetadata.txt',sep=""))
   pep.count <- table(pepmet[[1]])
   if(length(pep.count) != nrow(netmhc)){print('warning: number of peptides in metadata and neoantigens run through netmhcpan are not equal')}
   pep.count <- pep.count[intersect(names(pep.count),rownames(netmhc))]
@@ -154,7 +163,7 @@ netmhc.loader <- function(peplength,patient,wd){
   netmhc <- cbind(netmhc,as.vector(pep.count))
 
   if(contig.return == TRUE){
-    contig <- peptide.to.seq(peplength,netmhc,pepmet,patient)
+    contig <- peptide.to.seq(peplength,netmhc,pepmet,patient,wd,normal.wd)
     return(list(netmhc,contig[[1]],contig[[2]]))
   } else {
     return(netmhc)
