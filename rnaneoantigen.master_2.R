@@ -26,7 +26,7 @@ for(patientcounter in 1:1){ #length(patients)){
   print(paste('Processing patient',patientcounter,'of',length(patients)))
   patient <- patients[patientcounter]
   ptm2 = proc.time()
-  for(pepcounter in 1:length(peplengths)){
+  for(pepcounter in 2:length(peplengths)){
     print(paste('Peplength =',peplengths[pepcounter]))
     ptm = proc.time()
     peplength <- peplengths[pepcounter]
