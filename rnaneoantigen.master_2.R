@@ -1,41 +1,37 @@
 ######################## rnaneoantigen.master.R ################################
 library(matrixStats)
+library(data.table)
 library(reshape2) 
 library(biomaRt) 
 
 #wd.in is the location of your TSAcore output. Note that it must end in a '/'
-wd.in <- '/home/michaelsharpnack/Documents/PRJNA591860/LT_S01/'
+wd.in <- '/wynton/home/jones/sharpnacmi/PRJNA591860/AZ_03/'
 #wd is the location of your TSAannotate supporting files. Note that it must end in a '/'
-wd <- '/home/michaelsharpnack/Documents/rnaneoantigen/'
-bedtools.wd <- '/home/michaelsharpnack/local/bedtools2/bin/'
+wd <- '/wynton/home/jones/sharpnacmi/rnaneoantigen/'
+bedtools.wd <- NULL 
 #extra normal database for filtering peptides
-normal.wd <- '/home/michaelsharpnack/Documents/rnaneoantigen/references/normalpep_sep/'
+normal.wd <- '/wynton/home/jones/sharpnacmi/rnaneoantigen/references/normalpep_sep/'
 setwd(wd)
-load('RData/master_input.RData')
+load('RData/master_input_07272021.RData')
 source('TSAannotate/rnaneoantigen.loader_2.R')
 source('TSAannotate/rnaneoantigen.annotate.R')
-#wd <- '/wynton/home/jones/sharpnacmi/rnaneoantigen/'
 #gtf = gtf.load(wd)
-#ccds = framed.load(wd)
-#args = commandArgs(trailingOnly=TRUE)
-#patient <- toString(args[1])
+#ccds.chrom = framed.load(wd)
+args = commandArgs(trailingOnly=TRUE)
+patients <- toString(args[1])
 peplengths <- c(8,9,10,11)
-#patients <- c('07H103','10H080','10H118','12H018','luc2','luc4','luc6')
-patients <- c('SRR10783095')
 for(patientcounter in 1:1){ #length(patients)){
   print(paste('Processing patient',patientcounter,'of',length(patients)))
   patient <- patients[patientcounter]
   ptm2 = proc.time()
-  for(pepcounter in 2:length(peplengths)){
+  for(pepcounter in 1:length(peplengths)){
     print(paste('Peplength =',peplengths[pepcounter]))
     ptm = proc.time()
     peplength <- peplengths[pepcounter]
-    #load(paste('RData/netmhc_load/netmhc_load.',patient,'_',peplength,'.RData',sep=''))
-    #load(paste('../laumont_netmhc/rnaneoantigen.master',patient,'_',peplength,'.RData',sep=''))
     print('Loading and prepping netMHC output and generate contigs')
     netmhc <- netmhc.loader(peplength,patient,wd,wd.in,normal.wd)
     print("Perform nucleotide blast alignment of contigs")
-    blastout <- blast(patient,peplength,wd,max.mutations = 2,max.gaps = 1,onlytophits = TRUE)
+    blastout <- blast(patient,peplength,wd,max.mutations = 2,max.gaps = 1,onlytophits = TRUE,netmhc[[2]])
     print("Extract fasta reference sequences for peptides")
     blastout.fasta <- fastafromblast(patient,wd,blastout,netmhc[[2]],netmhc[[3]],peplength,bedtools.wd)
     print('Add junction-spanning reads')

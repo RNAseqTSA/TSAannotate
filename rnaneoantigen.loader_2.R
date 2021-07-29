@@ -29,16 +29,7 @@ peptide.to.seq <- function(peplength,netmhc_out,pepmet,patient,wd,normal.wd){
   codon.table[['R']] <- c('CGA','CGC','CGG','CGT','AGA','AGG')
   codon.table[['G']] <- c('GGA','GGC','GGG','GGT')
   
-  bind.names <- rownames(netmhc_out[rowMins(as.matrix(netmhc_out),na.rm=TRUE) < 0.5,])
-  bindname_normal <- vector(mode='numeric',length(bind.names))
-  for(bindname_counter in 1:length(bind.names)){
-    temp_bindname <- try(system(paste('grep -w ',bind.names[bindname_counter],' ',normal.wd,'luc2_',peplength,'mer_normalpep.txt_seq_',substr(bind.names[bindname_counter],1,2),sep=''),intern=TRUE))
-    if(length(temp_bindname != 0)){
-      bindname_normal[bindname_counter] = 1
-    }
-    rm(temp_bindname)
-  }
-  bind.names <- bind.names[bindname_normal == 0]
+  bind.names <- rownames(netmhc_out[rowMins(as.matrix(netmhc_out[,1:(dim(netmhc_out)[2]-1)]),na.rm=TRUE) < 50,])
   pepmet <- pepmet[(which(pepmet[[1]] %in% bind.names)),]
   pepmet <- pepmet[order(pepmet[[1]]),]
   pepmet <- pepmet[,c(2:1)]
@@ -49,8 +40,6 @@ peptide.to.seq <- function(peplength,netmhc_out,pepmet,patient,wd,normal.wd){
   contig.pepstart <- pep.contig
   #loop through peptides
   for(y in 1:length(bind.names)){
-    #print(paste('analyzing peptide',y,bind.names[y]))
-    
     #unique rna reads corresponding for peptide y
     reads.temp <- pepmet[[1]][which(pepmet[[2]] == bind.names[y])]
     unique.reads.freq <- table(reads.temp)
@@ -63,7 +52,6 @@ peptide.to.seq <- function(peplength,netmhc_out,pepmet,patient,wd,normal.wd){
       for(z in 1:nchar(unique.reads[o])){
         #print(paste('analyzing RNA read position',z))
         if(substr(unique.reads[o],z,z+2) %in% codon.table[[substr(bind.names[y],n,n)]]){
-          #print('peptide matched, stop on read and check subsequent peptides')
           n.temp <- n+1
           for(m in n:(peplength-1)){
             if(substr(unique.reads[o],z+m*3,z+m*3+2) %in% codon.table[[substr(bind.names[y],n.temp,n.temp)]]){
@@ -74,7 +62,6 @@ peptide.to.seq <- function(peplength,netmhc_out,pepmet,patient,wd,normal.wd){
             }
           }
           if(n.temp == peplength){
-            #print('match found!')
             pep.rna.seq[o,] <- c(z,substr(unique.reads[o],z,z+peplength*3-1),unique.reads[o],unique.reads.freq[o])
             break
           }
@@ -129,9 +116,16 @@ peptide.to.seq <- function(peplength,netmhc_out,pepmet,patient,wd,normal.wd){
   }
   contig.write <- vector(mode='character',length(pep.contig)*2)
   for(i in 1:length(pep.contig)){
-    contig.write[2*i-1] <- paste(">",names(pep.contig)[i],sep=' ')
+    contig.write[2*i-1] <- paste(">",names(pep.contig)[i],sep='')
     contig.write[2*i] <- pep.contig[i]
   }
+  #for(contig.counter in 1:ceiling(length(contig.write)/ceiling(length(contig.write))){
+  #  if(contig.counter < ceiling(length(contig.write)/ceiling(length(contig.write))){
+  #    write.table(contig.write[((contig.counter-1)*ceiling(length(contig.write)+1):(contig.counter*100)],file=paste(wd,'contig/',patient,peplength,'_',contig.counter,sep=''),quote=FALSE,row.names = FALSE,col.names=FALSE)
+  #  } else {
+  #    write.table(contig.write[((contig.counter-1)*1+1):length(contig.write)],file=paste(wd,'contig/',patient,peplength,'_',contig.counter,sep=''),quote=FALSE,row.names = FALSE,col.names=FALSE)
+  #  }
+  #}
   write.table(contig.write,file=paste(wd,'contig/',patient,peplength,sep=''),quote=FALSE,row.names = FALSE,col.names=FALSE)
   pep.contig.save <- cbind(pep.contig,peponly.contig,contig.pepstart)
   rownames(pep.contig.save) <- names(pep.contig)
@@ -141,19 +135,28 @@ peptide.to.seq <- function(peplength,netmhc_out,pepmet,patient,wd,normal.wd){
 
 
 netmhc.loader <- function(peplength,patient,wd,wd.in,normal.wd){
-  col.names <- c('Pos','HLA','Peptide','Core','Of','Gp','Gl','Ip','ll','lcore','Identity','Score','Aff(nM)','%Rank','BindLevel')
+  #col.names <- c('Pos','HLA','Peptide','Core','Of','Gp','Gl','Ip','ll','lcore','Identity','Score','Aff(nM)','%Rank','BindLevel')
   contig.return = TRUE
   #load netmhcpan output
-  netmhc <- read.table(paste(wd.in,patient,"_",peplength,"mer_neoantigens.txt",sep=""),header=FALSE,fill=TRUE,col.names = col.names,sep=',')
-  netmhc <- netmhc[nchar(as.character(netmhc[[3]])) == peplength,]
-  netmhc <- data.frame(netmhc[[3]],netmhc[[2]],netmhc[[13]])
+  #netmhc <- read.table(paste(wd.in,patient,"_",peplength,"mer_neoantigens.txt",sep=""),header=FALSE,fill=TRUE,col.names = col.names,sep=',')
+  #netmhc <- netmhc[nchar(as.character(netmhc[[3]])) == peplength,]
+  #netmhc <- data.frame(netmhc[[3]],netmhc[[2]],netmhc[[13]])
+  #colnames(netmhc) <- c('V1','V2','V3')
+  #netmhc <- netmhc[duplicated(netmhc) == FALSE,]
+  #netmhc <- dcast(netmhc,V1 ~ V2,value.var = 'V3')
+  #rownames(netmhc) <- netmhc[[1]]
+  #netmhc <- netmhc[,-1]
+  #netmhc <- netmhc[-grep('X',rownames(netmhc)),]
+ 
+  netmhc <- fread(paste(wd.in,patient,"_",peplength,"mer_neoantigens.txt",sep=""),header=FALSE)
+  netmhc <- netmhc[nchar(as.character(netmhc[[4]])) == peplength,]
+  netmhc <- data.frame(netmhc[[4]],netmhc[[2]],netmhc[[5]])
   colnames(netmhc) <- c('V1','V2','V3')
   netmhc <- netmhc[duplicated(netmhc) == FALSE,]
   netmhc <- dcast(netmhc,V1 ~ V2,value.var = 'V3')
   rownames(netmhc) <- netmhc[[1]]
   netmhc <- netmhc[,-1]
-  #netmhc <- netmhc[-grep('X',rownames(netmhc)),]
-      
+     
   #load in peptide counts
   pepmet <- read.table(paste(wd.in,patient,'_',peplength,'mer_neoantmetadata.txt',sep=""))
   pep.count <- table(pepmet[[1]])
