@@ -23,6 +23,5 @@ rnaneoantigen.master_2 is the main code
 Change the inputs and output directories within the rnaneoantigen.master_2 code \
 Change the peplength argument if needed. Default is 8-11 \
 command line argument is the sample name \
-\
 
 #Output is a spreadsheet of peptides in rows that mapped to the reference genome and their annotations in columns, including genomic location, variants (missense and IN/DELs), gene/exon, and coding reference frame. The coding reading frame is not tested.
