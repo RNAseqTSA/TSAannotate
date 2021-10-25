@@ -8,7 +8,7 @@ data.table
 reshape2
 biomaRt
 # Software:
-Blast+ (tested with version 2.9.0)
+Blast+ (tested with version 2.9.0) \
 bedtools (tested with version 2.29.2)
 
 # Required data:
