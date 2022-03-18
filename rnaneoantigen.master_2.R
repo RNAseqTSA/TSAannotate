@@ -49,7 +49,7 @@ for(patientcounter in 1:length(patients)){
     blastout.fasta.variant.gtf <- gtf.blast(blastout.fasta.variant,gtf[[1]],gtf[[2]],gtf[[3]])
     print('Add frame annotations')
     blastout.fasta.variant.gtf.framed <- framed(ccds.chrom,blastout.fasta.variant.gtf)
-    save(blastout,blastout.fasta,blastout.fasta.variant,blastout.fasta.variant.gtf,blastout.fasta.variant.gtf.framed, file = paste('RData/master/rnaneoantigen.master',patient,'_',peplength,'.RData',sep=''))
+    save(blastout,blastout.fasta,blastout.fasta.variant,blastout.fasta.variant.gtf,blastout.fasta.variant.gtf.framed, file = paste('rnaneoantigen.master',patient,'_',peplength,'.RData',sep=''))
     print('Analyzing this peplength took')
     print(proc.time()-ptm)
   }
