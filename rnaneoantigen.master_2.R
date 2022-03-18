@@ -28,19 +28,7 @@ source('TSAannotate/rnaneoantigen.annotate.R')
 
 peplengths <- c(8,9,10,11)
 for(patientcounter in 1:length(patients)){
-  print(paste('Pro
-Overview
-Repositories 3
-Packages
-People 2
-Teams
-Projects
-
-    Settings
-
-Pinned
-RNAseqTSA doesn't have any pinned public repositories yet.
-cessing patient',patientcounter,'of',length(patients)))
+  print(paste('Processing patient',patientcounter,'of',length(patients)))
   patient <- patients[patientcounter]
   ptm2 = proc.time()
   for(pepcounter in 1:length(peplengths)){
