@@ -5,23 +5,42 @@ library(reshape2)
 library(biomaRt) 
 
 #wd.in is the location of your TSAcore output. Note that it must end in a '/'
-wd.in <- '/wynton/home/jones/sharpnacmi/PRJNA591860/AZ_03/'
-#wd is the location of your TSAannotate supporting files. Note that it must end in a '/'
-wd <- '/wynton/home/jones/sharpnacmi/rnaneoantigen/'
+wd.in <- ''
+#wd is the location of your TSAannotate supporting files (files available for public download on dropbox). Note that it must end in a '/'
+wd <- '.../rnaneoantigen/'
 bedtools.wd <- NULL 
 #extra normal database for filtering peptides
-normal.wd <- '/wynton/home/jones/sharpnacmi/rnaneoantigen/references/normalpep_sep/'
+normal.wd <- paste(wd,'references/normalpep_sep/',sep="")
 setwd(wd)
-load('RData/master_input_07272021.RData')
+load('references/master_input_07272021.RData')
 source('TSAannotate/rnaneoantigen.loader_2.R')
 source('TSAannotate/rnaneoantigen.annotate.R')
+
+#only uncomment the below two lines if you are NOT loading master_input_07272021
 #gtf = gtf.load(wd)
 #ccds.chrom = framed.load(wd)
-args = commandArgs(trailingOnly=TRUE)
-patients <- toString(args[1])
+
+#uncomment the following two lines if you are running R from command line, with the patient IDs as the first argument
+#args = commandArgs(trailingOnly=TRUE)
+#patients <- toString(args[1])
+
+#patients is the vector of your file name prefixes in your TSAcore output
+
 peplengths <- c(8,9,10,11)
-for(patientcounter in 1:1){ #length(patients)){
-  print(paste('Processing patient',patientcounter,'of',length(patients)))
+for(patientcounter in 1:length(patients)){
+  print(paste('Pro
+Overview
+Repositories 3
+Packages
+People 2
+Teams
+Projects
+
+    Settings
+
+Pinned
+RNAseqTSA doesn't have any pinned public repositories yet.
+cessing patient',patientcounter,'of',length(patients)))
   patient <- patients[patientcounter]
   ptm2 = proc.time()
   for(pepcounter in 1:length(peplengths)){
