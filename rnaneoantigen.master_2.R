@@ -24,7 +24,8 @@ source('TSAannotate/rnaneoantigen.annotate.R')
 #args = commandArgs(trailingOnly=TRUE)
 #patients <- toString(args[1])
 
-#patients is the vector of your file name prefixes in your TSAcore output
+#patients is the vector of your file name prefixes in your TSAcore output. Uncomment line below if you want to directly add character vector of ids here.
+#patients <- c('')
 
 peplengths <- c(8,9,10,11)
 for(patientcounter in 1:length(patients)){
