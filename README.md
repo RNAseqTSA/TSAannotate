@@ -15,6 +15,7 @@ bedtools (tested with version 2.29.2)
 A reference gtf file: tested with gencode.v22.annotation.gtf \
 Reference genome (grch38, assembly 22) \
 Coding reading frame dataset (CCDS, GRCg38.p12 assembly 22, release number 2018614) \
+For ease of use, the references files used in publication and the directory structure can be downloaded from dropbox at the following link: https://www.dropbox.com/sh/htkven6dl9sv0vk/AACwgJiXQVCzeOpRMyIUSXgoa?dl=0
 
 # Usage
 rnaneoantigen.master_2.R is the wrapper for the annotate and loader functions.
